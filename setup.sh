@@ -14,7 +14,7 @@ set -o nounset    # fail on unset variables
 TICKS=$(echo $(date +%s | cut -b1-13))
 
 # Name of your team (optional)
-HEROKU_TEAM_NAME="appcloud-dev" 
+HEROKU_TEAM_NAME="" 
 
 # Name of the Heroku apps you'll use
 HEROKU_DEV_APP_NAME="dev$TICKS"
@@ -25,13 +25,18 @@ HEROKU_PROD_APP_NAME="prod$TICKS"
 HEROKU_PIPELINE_NAME="pipeline$TICKS"
 
 # Usernames or aliases of the orgs you're using
-DEV_HUB_USERNAME="HubOrg"
-DEV_USERNAME="DevOrg"
-STAGING_USERNAME="TestOrg"
-PROD_USERNAME="ProdOrg"
+read -p "Enter the alias of your dev hub username:" DEV_HUB_USERNAME
+#DEV_HUB_USERNAME="dreamforce-prod"
+read -p "Enter the alias of your dev sandbox username:" DEV_USERNAME
+#DEV_USERNAME="dreamforce-dev"
+read -p "Enter the alias of your stage sandbox username:" STAGING_USERNAME
+#STAGING_USERNAME="dreamforce-stage"
+read -p "Enter the alias of your prod org:" PROD_USERNAME
+#PROD_USERNAME="dreamforce-prod"
 
 # Repository with your code
-GITHUB_REPO="wadewegner/salesforce-dx-pipeline-sample"
+read -p "Enter the url to your github repository:" GITHUB_REPO
+#GITHUB_REPO="https://github.com/curiousblueprints/salesforce-dx-pipeline-mdapi-sample"
 
 ### Setup script
 
@@ -58,7 +63,7 @@ heroku config:set SFDX_BUILDPACK_DEBUG=false -a $HEROKU_PROD_APP_NAME
 
 # Setup sfdxUrl's for auth
 devHubSfdxAuthUrl=$(sfdx force:org:display --verbose -u $DEV_HUB_USERNAME --json | jq -r .result.sfdxAuthUrl)
-heroku config:set DEV_HUB_SFDX_AUTH_URL=$devHubSfdxAuthUrl -a $HEROKU_DEV_APP_NAME
+heroku config:set SFDX_DEV_HUB_AUTH_URL=$devHubSfdxAuthUrl -a $HEROKU_DEV_APP_NAME
 
 devSfdxAuthUrl=$(sfdx force:org:display --verbose -u $DEV_USERNAME --json | jq -r .result.sfdxAuthUrl)
 heroku config:set SFDX_AUTH_URL=$devSfdxAuthUrl -a $HEROKU_DEV_APP_NAME
@@ -74,9 +79,9 @@ heroku buildpacks:add -i 1 https://github.com/wadewegner/salesforce-cli-buildpac
 heroku buildpacks:add -i 1 https://github.com/wadewegner/salesforce-cli-buildpack#v3 -a $HEROKU_STAGING_APP_NAME
 heroku buildpacks:add -i 1 https://github.com/wadewegner/salesforce-cli-buildpack#v3 -a $HEROKU_PROD_APP_NAME
 
-heroku buildpacks:add -i 2 https://github.com/wadewegner/salesforce-dx-buildpack#v3 -a $HEROKU_DEV_APP_NAME
-heroku buildpacks:add -i 2 https://github.com/wadewegner/salesforce-dx-buildpack#v3 -a $HEROKU_STAGING_APP_NAME
-heroku buildpacks:add -i 2 https://github.com/wadewegner/salesforce-dx-buildpack#v3 -a $HEROKU_PROD_APP_NAME
+heroku buildpacks:add -i 2 https://github.com/curiousblueprints/salesforce-buildpack -a $HEROKU_DEV_APP_NAME
+heroku buildpacks:add -i 2 https://github.com/curiousblueprints/salesforce-buildpack -a $HEROKU_STAGING_APP_NAME
+heroku buildpacks:add -i 2 https://github.com/curiousblueprints/salesforce-buildpack -a $HEROKU_PROD_APP_NAME
 
 # Create Pipeline
 # Valid stages: "test", "review", "development", "staging", "production"
@@ -84,11 +89,15 @@ heroku pipelines:create $HEROKU_PIPELINE_NAME -a $HEROKU_DEV_APP_NAME -s develop
 heroku pipelines:add $HEROKU_PIPELINE_NAME -a $HEROKU_STAGING_APP_NAME -s staging
 heroku pipelines:add $HEROKU_PIPELINE_NAME -a $HEROKU_PROD_APP_NAME -s production
 # bug: https://github.com/heroku/heroku-pipelines/issues/80
-# heroku pipelines:setup $HEROKU_PIPELINE_NAME $GITHUB_REPO -y $HEROKU_TEAM_FLAG
 
-heroku ci:config:set -p $HEROKU_PIPELINE_NAME DEV_HUB_SFDX_AUTH_URL=$devHubSfdxAuthUrl
+heroku pipelines:connect $HEROKU_PIPELINE_NAME --repo $GITHUB_REPO
+
+heroku ci:config:set -p $HEROKU_PIPELINE_NAME SFDX_DEV_HUB_AUTH_URL=$devHubSfdxAuthUrl
 heroku ci:config:set -p $HEROKU_PIPELINE_NAME SFDX_AUTH_URL=$devSfdxAuthUrl
 heroku ci:config:set -p $HEROKU_PIPELINE_NAME SFDX_BUILDPACK_DEBUG=false
+
+#review apps
+#heroku reviewapps:enable -p $HEROKU_PIPELINE_NAME --wait-for-ci --autodeploy --autodestroy
 
 # Clean up script
 echo "heroku pipelines:destroy $HEROKU_PIPELINE_NAME
