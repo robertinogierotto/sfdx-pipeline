@@ -10,7 +10,7 @@ echo "hello from post-setup.sh"
 
 if [ "$STAGE" == "" ]
 then
-
+ 
   echo "only run from review app or ci"
   
 fi
