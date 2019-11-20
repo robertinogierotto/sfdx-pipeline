@@ -14,7 +14,7 @@ set -o nounset    # fail on unset variables
 TICKS=$(echo $(date +%s | cut -b1-13))
 
 # Name of your team (optional)
-HEROKU_TEAM_NAME="appcloud-dev" 
+HEROKU_TEAM_NAME="" 
 
 # Name of the Heroku apps you'll use
 HEROKU_DEV_APP_NAME="dev$TICKS"
@@ -25,13 +25,18 @@ HEROKU_PROD_APP_NAME="prod$TICKS"
 HEROKU_PIPELINE_NAME="pipeline$TICKS"
 
 # Usernames or aliases of the orgs you're using
-DEV_HUB_USERNAME="HubOrg"
-DEV_USERNAME="DevOrg"
-STAGING_USERNAME="TestOrg"
-PROD_USERNAME="ProdOrg"
+read -p "Enter the alias of your dev hub username:" DEV_HUB_USERNAME
+#DEV_HUB_USERNAME="dreamforce-prod"
+read -p "Enter the alias of your dev sandbox username:" DEV_USERNAME
+#DEV_USERNAME="dreamforce-dev"
+read -p "Enter the alias of your stage sandbox username:" STAGING_USERNAME
+#STAGING_USERNAME="dreamforce-stage"
+read -p "Enter the alias of your prod org:" PROD_USERNAME
+#PROD_USERNAME="dreamforce-prod"
 
 # Repository with your code
-GITHUB_REPO="wadewegner/salesforce-dx-pipeline-sample"
+read -p "Enter the url to your github repository:" GITHUB_REPO
+#GITHUB_REPO="https://github.com/curiousblueprints/salesforce-dx-pipeline-mdapi-sample"
 
 ### Setup script
 
@@ -74,9 +79,9 @@ heroku buildpacks:add -i 1 https://github.com/wadewegner/salesforce-cli-buildpac
 heroku buildpacks:add -i 1 https://github.com/wadewegner/salesforce-cli-buildpack#v3 -a $HEROKU_STAGING_APP_NAME
 heroku buildpacks:add -i 1 https://github.com/wadewegner/salesforce-cli-buildpack#v3 -a $HEROKU_PROD_APP_NAME
 
-heroku buildpacks:add -i 2 https://github.com/wadewegner/salesforce-dx-buildpack#v3 -a $HEROKU_DEV_APP_NAME
-heroku buildpacks:add -i 2 https://github.com/wadewegner/salesforce-dx-buildpack#v3 -a $HEROKU_STAGING_APP_NAME
-heroku buildpacks:add -i 2 https://github.com/wadewegner/salesforce-dx-buildpack#v3 -a $HEROKU_PROD_APP_NAME
+heroku buildpacks:add -i 2 https://github.com/curiousblueprints/salesforce-buildpack -a $HEROKU_DEV_APP_NAME
+heroku buildpacks:add -i 2 https://github.com/curiousblueprints/salesforce-buildpack -a $HEROKU_STAGING_APP_NAME
+heroku buildpacks:add -i 2 https://github.com/curiousblueprints/salesforce-buildpack -a $HEROKU_PROD_APP_NAME
 
 # Create Pipeline
 # Valid stages: "test", "review", "development", "staging", "production"
