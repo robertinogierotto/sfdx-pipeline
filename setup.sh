@@ -96,6 +96,9 @@ heroku ci:config:set -p $HEROKU_PIPELINE_NAME SFDX_DEV_HUB_AUTH_URL=$devHubSfdxA
 heroku ci:config:set -p $HEROKU_PIPELINE_NAME SFDX_AUTH_URL=$devSfdxAuthUrl
 heroku ci:config:set -p $HEROKU_PIPELINE_NAME SFDX_BUILDPACK_DEBUG=false
 
+#review apps
+#heroku reviewapps:enable -p $HEROKU_PIPELINE_NAME --wait-for-ci --autodeploy --autodestroy
+
 # Clean up script
 echo "heroku pipelines:destroy $HEROKU_PIPELINE_NAME
 heroku apps:destroy -a $HEROKU_DEV_APP_NAME -c $HEROKU_DEV_APP_NAME
